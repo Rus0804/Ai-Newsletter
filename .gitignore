@@ -1,0 +1,30 @@
+# ---- Python ----
+backend/venv/
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ---- Environment Variables ----
+backend/.env
+
+# ---- Node (React/Vite) ----
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+frontend/.env
+
+# ---- macOS ----
+.DS_Store
+
+# ---- IDEs & Editors ----
+.vscode/
+.idea/
+*.swp
+
+# ---- Project Specific ----
+backend/generated-html/*
+backend/generated-pdf/*
