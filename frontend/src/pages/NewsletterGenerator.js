@@ -53,7 +53,7 @@ function NewsletterGenerator() {
             const data = msg.replace("data: ", "").trim();
             setProgress(data);
 
-            if (data.startsWith("done|")) {
+            if (data.startsWith("Done|")) {
               const parts = data.split("|");
               const filename = parts[1];
               if (filename && !filename.startsWith("Error")) {
@@ -82,8 +82,7 @@ function NewsletterGenerator() {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ filename })
+      }
     });
 
     if (!response.ok) {
@@ -173,7 +172,7 @@ function NewsletterGenerator() {
             progress.includes("Error") ? "error" : "success"
           }`}
         >
-          <strong>Status:</strong> {progress}
+          <strong>Status:</strong> {progress.startsWith('Done')? (progress.includes("Error")? progress.split('|')[1]: 'Done'): progress}
         </div>
       )}
 
