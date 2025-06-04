@@ -52,7 +52,7 @@ async def generate_newsletter(
             print("No PDF template uploaded.")
             yield "data: No PDF template uploaded\n\n"
             await asyncio.sleep(1)
-            yield "data: done|Error: No Template\n\n"
+            yield "data: Done|Error: No Template\n\n"
             await asyncio.sleep(1)
 
         else:
@@ -66,7 +66,7 @@ async def generate_newsletter(
             data = await convert_pdf_to_html(pdfBytes, pdfTemplate.filename)
             if not data[0]:
                 print("Step One: Conversion Failed")
-                yield "data: done|Error: Could Not Convert Template"
+                yield "data: Done|Error: Could Not Convert Template"
                 return
 
             print("Step One: Converted pdf to html")
@@ -103,7 +103,7 @@ async def generate_newsletter(
 
                 else:
                     attempts += 1
-                    if(attempts<3):
+                    if(attempts < 3):
                         print("Step Five: Improper Output, Trying Again...")
                         yield "data: Step 5: Improper Output, Trying Again...\n\n"
                         await asyncio.sleep(1)
@@ -112,7 +112,7 @@ async def generate_newsletter(
 
                 yield "data: LLM failed after 3 attempts.\n\n"
                 await asyncio.sleep(1)
-                yield "data: done|Error: Content Generation Failure, Please Try Again\n\n"
+                yield "data: Done|Error: Content Generation Failure, Please Try Again\n\n"
                 await asyncio.sleep(1)
                 return
 
@@ -132,7 +132,7 @@ async def generate_newsletter(
 
                 yield "data: Step 7: Created Output File\n\n"
                 await asyncio.sleep(1)
-                yield "data: done|output.html\n\n"
+                yield "data: Done|output.html\n\n"
                 await asyncio.sleep(1)
                 
                 return
