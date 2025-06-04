@@ -38,6 +38,7 @@ async def convert_pdf_to_html(fileBytes, filename):
     if response.status_code == 200:
         download_url = response.json()["Files"][0]["Url"]
         html_response = requests.get(download_url)
+        print("Conversion Successful")
         with open(f"generated-html/{filename[:-4]}.html", "wb") as f:
             f.write(html_response.content)
 

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form, File, UploadFile
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from generate_content import (
     write_output,
     check_output,
 )
+from editor_functions import transformText, generate_image
 
 app = FastAPI()
 
@@ -37,7 +38,8 @@ async def generate_newsletter(
     tone: Optional[str] = Form(None),
     pdfTemplate: Optional[UploadFile] = File(None),
 ):
-    pdfBytes = await pdfTemplate.read()
+    if(pdfTemplate):
+        pdfBytes = await pdfTemplate.read()
 
     async def generate():
         yield "data: Received content...\n\n"
@@ -50,7 +52,7 @@ async def generate_newsletter(
             print("No PDF template uploaded.")
             yield "data: No PDF template uploaded\n\n"
             await asyncio.sleep(1)
-            yield "data: done|error\n\n"
+            yield "data: done|Error: No Template\n\n"
             await asyncio.sleep(1)
 
         else:
@@ -62,8 +64,9 @@ async def generate_newsletter(
             await asyncio.sleep(1)
 
             data = await convert_pdf_to_html(pdfBytes, pdfTemplate.filename)
-            if not data:
-                yield "data: done|error"
+            if not data[0]:
+                print("Step One: Conversion Failed")
+                yield "data: done|Error: Could Not Convert Template"
                 return
 
             print("Step One: Converted pdf to html")
@@ -109,7 +112,7 @@ async def generate_newsletter(
 
                 yield "data: LLM failed after 3 attempts.\n\n"
                 await asyncio.sleep(1)
-                yield "data: done|error\n\n"
+                yield "data: done|Error: Content Generation Failure, Please Try Again\n\n"
                 await asyncio.sleep(1)
                 return
 
@@ -153,3 +156,25 @@ async def get_pdf_download():
                 filename="output.pdf",
                 media_type="application/pdf"
             )
+
+class TransformTextReq(BaseModel):
+    text: str
+    tone: str
+    custom_prompt: Optional[str] = None
+
+@app.post("/text")
+async def change_tone(req: TransformTextReq):
+    text = req.text
+    tone = req.tone
+    custom_prompt = req.custom_prompt
+    transformed_text = transformText(text, tone, custom_prompt)
+    return {"transformed": transformed_text}
+
+class GenerateReq(BaseModel):
+    prompt: str
+
+@app.post("/image")
+async def get_ai_image(req: GenerateReq):
+    prompt = req.prompt
+    img_dict = generate_image(prompt)
+    return JSONResponse(content=img_dict)

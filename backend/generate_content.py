@@ -48,9 +48,9 @@ def get_content(template, formalised_content):
     prompt = f"{formalised_content}\nReplace the template text with the newsletter ONLY REPLACE THE TEMPLATE STRINGS DO NOT ADD OR REMOVE STYLES OR TAGS " + str(template.body)
 
     client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=API_KEY,
-    timeout = 60
+        base_url="https://openrouter.ai/api/v1",
+        api_key=API_KEY,
+        timeout = 60
     )
 
     try:
