@@ -158,31 +158,28 @@ function EditorPage() {
     </html>
   `;
 
-  // Create a Blob from the combined HTML
-  const blob = new Blob([fullHtml], { type: 'text/html' });
-
-  // Prepare the form data to send to the backend
-  const formData = new FormData();
-  formData.append('file', blob, 'combined.html');  // Attach the HTML blob
-
   // Send the HTML content to the server
-  fetch('/convertToPdf', {
+  fetch('http://127.0.0.1:8000/export', {
     method: 'POST',
-    body: formData
+    body: JSON.stringify({ html: fullHtml })
   })
-    .then(response => response.json())
-    .then(data => {
-      if (data.pdf_path) {
-        alert(`PDF converted successfully! You can download it from: ${data.pdf_path}`);
-        // Optional: auto-download
-        window.open(data.pdf_path, '_blank');
-      } else {
-        alert('Error converting to PDF');
-      }
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to convert to PDF');
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'newsletter.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('An error occurred while converting to PDF');
+      console.error('Export error:', error);
+      alert('❌ Could not generate PDF');
     });
 };
 
