@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+import json
 import asyncio
 from generate_template import convert_pdf_to_html, clean_html, convert_html_to_pdf
 from generate_content import (
@@ -24,7 +25,7 @@ app.mount("/html", StaticFiles(directory="generated-html"), name="html")
 # Allow CORS from your frontend (adjust origin as needed)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],  # React dev server
+    allow_origins=["*"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -140,11 +141,17 @@ async def generate_newsletter(
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/export")
-async def get_pdf_download():
-    html_path = f"generated-html/output.html"
+async def get_pdf_download(request: Request):
 
-    with open(html_path, "r", encoding="utf-8") as f:
-        html_content = f.read()
+    try:
+        data = await request.json()
+        html_content = data.get("html")
+
+    except (json.decoder.JSONDecodeError):
+        html_path = f"generated-html/output.html"
+
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
 
     done = await convert_html_to_pdf(html_content)
 

@@ -107,7 +107,17 @@ def add_images_and_styles_with_content(template, llm_output, img_srcs, all_style
 
     count = 0
     for tag in template.body.find_all():
-        tag['style'] = all_styles[count]
+        tag_style = all_styles[count]
+
+        if 'class' in tag.attrs:
+            if 'page' not in tag['class']:
+                print(tag.name)
+                tag_style = all_styles[count]
+                start = tag_style.find('height:')
+                end = tag_style[start:].find(';') + start
+                tag_style = tag_style.replace(tag_style[start:end], 'height: auto')
+                
+        tag['style'] = tag_style
         count+=1
     
     return template
