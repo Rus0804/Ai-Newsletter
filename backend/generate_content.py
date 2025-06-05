@@ -111,7 +111,6 @@ def add_images_and_styles_with_content(template, llm_output, img_srcs, all_style
 
         if 'class' in tag.attrs:
             if 'page' not in tag['class']:
-                print(tag.name)
                 tag_style = all_styles[count]
                 start = tag_style.find('height:')
                 end = tag_style[start:].find(';') + start
