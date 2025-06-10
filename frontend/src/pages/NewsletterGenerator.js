@@ -20,6 +20,12 @@ function NewsletterGenerator() {
     setHtmlFilePath(null);
     setLoading(true);
 
+    if (!pdfTemplate && !content.trim()) {
+      setProgress("❌ Please provide content if no PDF template is uploaded.");
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("topic", topic);
     if (content.trim()) formData.append("content", content);
