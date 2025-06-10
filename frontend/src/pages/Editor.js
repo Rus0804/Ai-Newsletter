@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import StudioEditor from '@grapesjs/studio-sdk/react';
 import '@grapesjs/studio-sdk/style';
+import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
 
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
@@ -249,6 +250,7 @@ function EditorPage() {
             },
           },
           plugins: [
+            canvasAbsoluteMode,
             editor => {
               editor.Components.addType('text', {
                 model: {
