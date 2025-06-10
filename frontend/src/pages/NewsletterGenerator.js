@@ -36,35 +36,46 @@ function NewsletterGenerator() {
         throw new Error("Failed to connect to the backend.");
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let resultText = "";
+      if (pdfTemplate){
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let resultText = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        resultText += chunk;
+          const chunk = decoder.decode(value, { stream: true });
+          resultText += chunk;
 
-        const messages = resultText.split("\n\n").filter(Boolean);
-        for (let msg of messages) {
-          if (msg.startsWith("data: ")) {
-            const data = msg.replace("data: ", "").trim();
-            setProgress(data);
+          const messages = resultText.split("\n\n").filter(Boolean);
+          for (let msg of messages) {
+            if (msg.startsWith("data: ")) {
+              const data = msg.replace("data: ", "").trim();
+              setProgress(data);
 
-            if (data.startsWith("Done|")) {
-              const parts = data.split("|");
-              const filename = parts[1];
-              if (filename && !filename.startsWith("Error")) {
-                setHtmlFilePath(`http://127.0.0.1:8000/html/${filename}`);
+              if (data.startsWith("Done|")) {
+                const parts = data.split("|");
+                const filename = parts[1];
+                if (filename && !filename.startsWith("Error")) {
+                  setHtmlFilePath(`http://127.0.0.1:8000/html/${filename}`);
+                }
+                setLoading(false);
+                return;
               }
-              setLoading(false);
-              return;
             }
           }
         }
       }
+      else{
+        const data = await response.json();
+        if(data.message === 'Done'){
+          setHtmlFilePath(`http://127.0.0.1:8000/html/output.html`);
+        }
+        setProgress(data.message);
+        setLoading(false);
+      }
+      
     } catch (error) {
       console.error("Error:", error.message);
       setProgress("❌ Error occurred during generation.");

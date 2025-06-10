@@ -14,6 +14,7 @@ from generate_content import (
     remove_images_and_styles,
     write_output,
     check_output,
+    no_template_generation
 )
 from editor_functions import transformText, generate_image
 
@@ -42,103 +43,110 @@ async def generate_newsletter(
     if(pdfTemplate):
         pdfBytes = await pdfTemplate.read()
 
-    async def generate():
-        yield "data: Received content...\n\n"
-        await asyncio.sleep(1)
-        print("Received topic:", topic)
-        print("Received content:", content)
-        print("Received tone:", tone if tone else "None")
-
-        if not pdfTemplate:
-            print("No PDF template uploaded.")
-            yield "data: No PDF template uploaded\n\n"
+        async def generate():
+            yield "data: Received content...\n\n"
             await asyncio.sleep(1)
-            yield "data: Done|Error: No Template\n\n"
-            await asyncio.sleep(1)
+            print("Received topic:", topic)
+            print("Received content:", content)
+            print("Received tone:", tone if tone else "None")
 
-        else:
-
-            file_name = f"generated-html/{pdfTemplate.filename[:-4]}"
-
-            print("STARTING WITH", pdfTemplate.filename)
-            yield f"data: Starting with {pdfTemplate.filename}\n\n"
-            await asyncio.sleep(1)
-
-            data = await convert_pdf_to_html(pdfBytes, pdfTemplate.filename)
-            if not data[0]:
-                print("Step One: Conversion Failed")
-                yield "data: Done|Error: Could Not Convert Template"
-                return
-
-            print("Step One: Converted pdf to html")
-            yield "data: Step 1: Converted pdf to html\n\n"
-            await asyncio.sleep(1)
-
-            cleaned_file = clean_html(file_name)
-
-            print("Step Two: Converted html to template")
-            yield "data: Step 2: Converted html to template\n\n"
-            await asyncio.sleep(1)
-
-            template, img_srcs, all_styles = remove_images_and_styles(cleaned_file)
-
-            print("Step Three: Preprocessed template for prompting")
-            yield "data: Step 3: Preprocessed template for prompting\n\n"
-            await asyncio.sleep(1)
-
-            final_prompt = build_prompt(topic, content, tone)
-            print("Step Four: Built prompt from from inputs")
-            yield "data: Step 4: Built prompt from from inputs\n\n"
-            await asyncio.sleep(1)
-
-            attempts = 0
-            while attempts < 3:
-
-                llm_output = get_content(template, final_prompt)
-
-                if check_output(llm_output, len(all_styles)):
-                    print("Step Five: Recieved content from llm")
-                    yield "data: Step 5: Recieved content from llm\n\n"
-                    await asyncio.sleep(1)
-                    break
-
-                else:
-                    attempts += 1
-                    if(attempts < 3):
-                        print("Step Five: Improper Output, Trying Again...")
-                        yield "data: Step 5: Improper Output, Trying Again...\n\n"
-                        await asyncio.sleep(1)
-
-            if attempts == 3:
-
-                yield "data: LLM failed after 3 attempts.\n\n"
+            if not pdfTemplate:
+                print("No PDF template uploaded.")
+                yield "data: No PDF template uploaded\n\n"
                 await asyncio.sleep(1)
-                yield "data: Done|Error: Content Generation Failure, Please Try Again\n\n"
+                yield "data: Done|Error: No Template\n\n"
                 await asyncio.sleep(1)
-                return
 
             else:
-                template = add_images_and_styles_with_content(
-                    template, llm_output, img_srcs, all_styles
-                )
 
-                print("Step Six: Readded removed images and styles")
+                file_name = f"generated-html/{pdfTemplate.filename[:-4]}"
 
-                yield "data: Step 6: Readded removed images and styles\n\n"
+                print("STARTING WITH", pdfTemplate.filename)
+                yield f"data: Starting with {pdfTemplate.filename}\n\n"
                 await asyncio.sleep(1)
 
-                write_output(template)
+                data = await convert_pdf_to_html(pdfBytes, pdfTemplate.filename)
+                if not data[0]:
+                    print("Step One: Conversion Failed")
+                    yield "data: Done|Error: Could Not Convert Template"
+                    return
 
-                print("Step Seven: Created Output File")
-
-                yield "data: Step 7: Created Output File\n\n"
+                print("Step One: Converted pdf to html")
+                yield "data: Step 1: Converted pdf to html\n\n"
                 await asyncio.sleep(1)
-                yield "data: Done|output.html\n\n"
-                await asyncio.sleep(1)
-                
-                return
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+                cleaned_file = clean_html(file_name)
+
+                print("Step Two: Converted html to template")
+                yield "data: Step 2: Converted html to template\n\n"
+                await asyncio.sleep(1)
+
+                template, img_srcs, all_styles = remove_images_and_styles(cleaned_file)
+
+                print("Step Three: Preprocessed template for prompting")
+                yield "data: Step 3: Preprocessed template for prompting\n\n"
+                await asyncio.sleep(1)
+
+                final_prompt = build_prompt(topic, content, tone)
+                print("Step Four: Built prompt from from inputs")
+                yield "data: Step 4: Built prompt from from inputs\n\n"
+                await asyncio.sleep(1)
+
+                attempts = 0
+                while attempts < 3:
+
+                    llm_output = get_content(template, final_prompt)
+
+                    if check_output(llm_output, len(all_styles)):
+                        print("Step Five: Recieved content from llm")
+                        yield "data: Step 5: Recieved content from llm\n\n"
+                        await asyncio.sleep(1)
+                        break
+
+                    else:
+                        attempts += 1
+                        if(attempts < 3):
+                            print("Step Five: Improper Output, Trying Again...")
+                            yield "data: Step 5: Improper Output, Trying Again...\n\n"
+                            await asyncio.sleep(1)
+
+                if attempts == 3:
+
+                    yield "data: LLM failed after 3 attempts.\n\n"
+                    await asyncio.sleep(1)
+                    yield "data: Done|Error: Content Generation Failure, Please Try Again\n\n"
+                    await asyncio.sleep(1)
+                    return
+
+                else:
+                    template = add_images_and_styles_with_content(
+                        template, llm_output, img_srcs, all_styles
+                    )
+
+                    print("Step Six: Readded removed images and styles")
+
+                    yield "data: Step 6: Readded removed images and styles\n\n"
+                    await asyncio.sleep(1)
+
+                    write_output(template)
+
+                    print("Step Seven: Created Output File")
+
+                    yield "data: Step 7: Created Output File\n\n"
+                    await asyncio.sleep(1)
+                    yield "data: Done|output.html\n\n"
+                    await asyncio.sleep(1)
+                    
+                    return
+            
+        return StreamingResponse(generate(), media_type="text/event-stream")
+    else:
+        
+        no_template_generation(content, topic, tone)
+
+        return JSONResponse(
+            content = {"message": "Done"}
+        )
 
 @app.post("/export")
 async def get_pdf_download(request: Request):
