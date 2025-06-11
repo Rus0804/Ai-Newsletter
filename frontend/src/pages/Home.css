@@ -1,0 +1,33 @@
+.home-container {
+  display: flex;
+}
+
+.main-content {
+  margin-left: 220px;
+  padding: 2rem;
+  flex: 1;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.home-title {
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+.row-section {
+  margin-bottom: 2rem;
+}
+
+.row-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.card {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 0.5rem;
+}

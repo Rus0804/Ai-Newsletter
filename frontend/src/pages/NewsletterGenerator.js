@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./NewsletterGenerator.css";
+import Sidebar from "./Sidebar.js";
 
 function NewsletterGenerator() {
   const [topic, setTopic] = useState("");
@@ -125,6 +126,7 @@ function NewsletterGenerator() {
 
   return (
     <div className="app-container">
+      <Sidebar />
       <h1 className="app-title">📰 AI Newsletter Generator</h1>
 
       <form onSubmit={handleSubmit}>
