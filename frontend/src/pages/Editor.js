@@ -22,14 +22,12 @@ function EditorPage() {
   useEffect(() => {
 
     const func = async() => {
-        const response = await fetch('http://127.0.0.1:8000/html/output.html')
+        await fetch('http://127.0.0.1:8000/html/output.html')
         .then(res => res.text())
         .then(setHtmlContent)
         .catch(console.error);
-        console.log(response)
     }
     func()
-    console.log("hi")
 
   }, []);
 
@@ -184,7 +182,6 @@ function EditorPage() {
     });
 };
 
-
   useEffect(() => {
     if (editorReady) {
       // Add custom button to the editor's top toolbar
@@ -206,33 +203,49 @@ function EditorPage() {
     }
   }, [editorReady]);
 
+  const onReady = async (editor) => {
+    setEditorReady(editor);
+  }
+
   return (
     <div style={{ height: '100vh' }}>
-        <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5 }}>
-          {/* Export to PDF Button */}
-          <button
-            onClick={() => (editorReady && exportToPDF(editorReady))}
-            style={{
-              padding: '6px 12px',
-              fontSize: '14px',
-              backgroundColor: '#7E57C2', // Purple
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              zIndex: 9999
-            }}
-          >
-            Export to PDF
-          </button>
-        </div>
+      <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5 }}>
+        <button
+          onClick={() => (editorReady && exportToPDF(editorReady))}
+          style={{
+            padding: '6px 12px',
+            fontSize: '14px',
+            backgroundColor: '#7E57C2', // Purple
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            zIndex: 9999
+          }}
+        >
+          Export to PDF
+        </button>
+      </div>
 
-
-
-      <StudioEditor
-        onReady={editor => setEditorReady(editor)}
+      {htmlContent &&(<StudioEditor
         options={{
+          onReady: onReady,
+          storage: {
+            type: 'self',
+            autosaveChanges: 100,
+            autosaveIntervalMs: 120000,
+            onSave: async ({project}) => {
+              console.log('✅ Custom onSave called with project data:');
+              console.log('✅ Data:', project);
+              
+              alert('Saved!');
+            },
+            onLoad: async() => {
+              return {pages: [{ name: 'Edit Template', component: htmlContent }]}
+            }
+          },
+          
           project: {
             default: {
               pages: [
@@ -251,6 +264,7 @@ function EditorPage() {
           },
           plugins: [
             canvasAbsoluteMode,
+            
             editor => {
               editor.Components.addType('text', {
                 model: {
@@ -286,7 +300,9 @@ function EditorPage() {
             },
           ],
         }}
-      />
+      />)}
+
+      
 
       {/* TEXT MODAL */}
       {modalOpen && (
