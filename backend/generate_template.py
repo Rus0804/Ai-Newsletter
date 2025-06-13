@@ -103,6 +103,7 @@ def combine_text(html_block):
         'body-text': '{{ body }}',
         'title': '{{ title }}',
         'heading-3': '{{ heading }}',
+        'heading-4': '{{ heading }}',
         'list-paragraph': '{{ body }}',
         'paragraph': '{{ body }}'
         }
