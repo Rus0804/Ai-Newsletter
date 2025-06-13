@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional
 import json
 import asyncio
+from login_functions import LoginRequest, ResetPasswordRequest, ResetRequest, signup, login, reset_password, request_password_reset 
 from generate_template import convert_pdf_to_html, clean_html, convert_html_to_pdf
 from generate_content import (
     get_content,
@@ -32,6 +33,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/signup")
+async def set_signup(request: LoginRequest):
+    print("New user req")
+    return signup(request)
+
+@app.post("/login")
+def set_login(request: LoginRequest):
+    return login(request)
+
+@app.post("/reset-password")
+def forgot_password(req: ResetPasswordRequest):
+    print('reset password req recieved')
+    return reset_password(req)
+
+@app.post("/request-password-reset")
+async def set_request_reset(payload: ResetRequest, request: Request):
+    print("reset password email req")
+    return await request_password_reset(payload, request)
 
 @app.post("/generate")
 async def generate_newsletter(

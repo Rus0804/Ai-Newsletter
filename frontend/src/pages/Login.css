@@ -52,3 +52,17 @@
   margin-bottom: 1rem;
   text-align: center;
 }
+
+.login-toggle {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.login-link {
+  color: #007bff;
+  cursor: pointer;
+  font-weight: bold;
+}
+.login-link:hover {
+  text-decoration: underline;
+}
