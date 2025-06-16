@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import StudioEditor from '@grapesjs/studio-sdk/react';
 import '@grapesjs/studio-sdk/style';
 import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
@@ -6,6 +6,11 @@ import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
   const [editorReady, setEditorReady] = useState(null);
+  const [projectName, setProjectName] = useState('Untitled Draft');
+
+  const filename = localStorage.getItem('filename') || null;
+
+  const editorRef = useRef(null);
 
   // Text modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,15 +34,9 @@ function EditorPage() {
     }
     func()
 
-  }, []);
+    if(filename){setProjectName(filename)}
 
-  useEffect(() => {
-    if (htmlContent && editorReady) {
-      editorReady.loadProjectData({
-        pages: [{ name: 'Edit Template', component: htmlContent }],
-      });
-    }
-  }, [htmlContent, editorReady]);
+  },[filename, htmlContent]);
 
   const openModal = (component) => {
     setSelectedComponent(component);
@@ -137,79 +136,135 @@ function EditorPage() {
     }
   };
 
-  // Function to export the HTML from GrapesJS and send to server for PDF conversion
   const exportToPDF = (editor) => {
-  // Get HTML and CSS content from GrapesJS
-  const htmlContent = editor.getHtml();
-  const cssContent = editor.getCss();
+  
+    // Get HTML and CSS content from GrapesJS
+    const htmlContent = editor.getHtml();
+    const cssContent = editor.getCss();
 
-  // Combine HTML and CSS into one self-contained HTML file
-  const fullHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>${cssContent}</style>
-    </head>
-    <body>
-      ${htmlContent}
-    </body>
-    </html>
-  `;
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>${cssContent}</style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
 
-  // Send the HTML content to the server
-  fetch('http://127.0.0.1:8000/export', {
-    method: 'POST',
-    body: JSON.stringify({ html: fullHtml })
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to convert to PDF');
-      return response.blob();
+    fetch('http://127.0.0.1:8000/export', {
+      method: 'POST',
+      body: JSON.stringify({ html: fullHtml })
     })
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'newsletter.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    })
-    .catch(error => {
-      console.error('Export error:', error);
-      alert('❌ Could not generate PDF');
-    });
-};
-
-  useEffect(() => {
-    if (editorReady) {
-      // Add custom button to the editor's top toolbar
-      editorReady.Panels.addButton('options', {
-        id: 'export-pdf', // Button ID
-        className: 'fa fa-download', // Use any icon you like
-        label: 'Export to PDF',
-        command: 'export-pdf', // Custom command
-        attributes: { title: 'Export the current design to PDF' },
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to convert to PDF');
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'newsletter.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error('Export error:', error);
+        alert('❌ Could not generate PDF');
       });
+  };
 
-      // Register the custom command to trigger exportToPDF
-      editorReady.Commands.add('export-pdf', {
-        run: function(editor) {
-          // Call the exportToPDF function
-          exportToPDF(editor);
+  const handleSave = async ({ project }) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const htmlString = editor.getHtml();
+    const cssString = editor.getCss();
+
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>${cssString}</style>
+      </head>
+      <body>${htmlString}</body>
+      </html>
+    `;
+
+    const token = localStorage.getItem('authToken');
+    const version = parseInt(localStorage.getItem('version')) || 0;
+    const projID = localStorage.getItem('projectID');
+
+    const reqbody = {html: fullHtml, projectData: project, fname: projectName, version: version+1, projID: projID}
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/save-draft', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify(reqbody),
       });
-    }
-  }, [editorReady]);
 
-  const onReady = async (editor) => {
-    setEditorReady(editor);
-  }
+      if (!response.ok) {
+        const errorText = await response.text(); // Optional: to get more detailed backend error
+        throw new Error(`Failed to send data: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.file_id) {
+        console.log('✅ Received file_id:', data.file_id, version);
+        localStorage.setItem('version', version+1);
+        localStorage.setItem('projectID', data.file_id);
+        localStorage.setItem('filename', projectName);
+
+      } else {
+        console.warn('⚠️ file_id was null or undefined');
+      }
+  alert('✅ Draft saved successfully!');
+  
+} catch (error) {
+  console.error('❌ Error while saving draft:', error);
+  alert('❌ Failed to save draft. Please try again.');
+}
+
+  };
+
+  const handleLoad = async (editorprop) => {
+    editorRef.current = editorprop.editor;
+    setEditorReady(editorprop.editor)
+    editorprop.editor.loadProjectData({
+      pages: [{ name: 'Edit Template', component: htmlContent }],
+    })
+    return {
+      pages: [{ name: 'Edit Template', component: htmlContent }],
+    };
+  };
 
   return (
     <div style={{ height: '100vh' }}>
-      <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5 }}>
+      <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <input
+          type="text"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="Project Name"
+          style={{
+            padding: '6px 10px',
+            fontSize: '14px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            width: '200px'
+          }}
+        />
         <button
           onClick={() => (editorReady && exportToPDF(editorReady))}
           style={{
@@ -221,7 +276,6 @@ function EditorPage() {
             borderRadius: '4px',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            zIndex: 9999
           }}
         >
           Export to PDF
@@ -230,20 +284,12 @@ function EditorPage() {
 
       {htmlContent &&(<StudioEditor
         options={{
-          onReady: onReady,
           storage: {
             type: 'self',
             autosaveChanges: 100,
             autosaveIntervalMs: 120000,
-            onSave: async ({project}) => {
-              console.log('✅ Custom onSave called with project data:');
-              console.log('✅ Data:', project);
-              
-              alert('Saved!');
-            },
-            onLoad: async() => {
-              return {pages: [{ name: 'Edit Template', component: htmlContent }]}
-            }
+            onSave: handleSave,
+            onLoad: handleLoad,
           },
           
           project: {
@@ -301,8 +347,6 @@ function EditorPage() {
           ],
         }}
       />)}
-
-      
 
       {/* TEXT MODAL */}
       {modalOpen && (

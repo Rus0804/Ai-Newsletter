@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./NewsletterGenerator.css";
 import Sidebar from "./Sidebar.js";
 
@@ -10,6 +11,7 @@ function NewsletterGenerator() {
   const [htmlFilePath, setHtmlFilePath] = useState(null);
   const [progress, setProgress] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     setPdfTemplate(e.target.files[0]);
@@ -198,7 +200,7 @@ function NewsletterGenerator() {
       {htmlFilePath && (
         <div className="view-button-container">
           <button
-            onClick={() => window.open(htmlFilePath, "_blank")}
+            onClick={() => navigate(htmlFilePath)}
             className="view-button"
           >
             🌐 View Newsletter
@@ -211,7 +213,12 @@ function NewsletterGenerator() {
           </button>
           <div style={{ marginTop: "2rem" }}>
             <button
-            onClick={() => window.location.href = "/editor"}
+            onClick={() => {
+              localStorage.setItem('projectID', null)
+              localStorage.setItem('filename', null)
+              localStorage.setItem('version', 0)
+              navigate("/editor")
+            }}
             className="navigate-button"
             >
             🛠️ Go to Editor
