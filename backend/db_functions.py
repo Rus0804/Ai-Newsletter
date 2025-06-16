@@ -71,3 +71,95 @@ async def save_draft(request: Request):
         if (e.message == 'JWT expired'):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
+    
+async def get_newsletters(request: Request):
+
+    token = request.headers.get("authorization")
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = token[7:]
+    user_db = get_user_db(token)
+
+    data = await request.json()
+    proj_type = data.get("type")
+
+    try:
+
+        response = user_db.from_("latest files").select('*').order("edited_at", desc=True).eq("project_status", proj_type).execute()
+        
+        return response.data
+    
+    except Exception as e:
+        print("Exception:", e)
+        if (e.message == 'JWT expired'):
+            raise HTTPException(status_code=401, detail="User Session Timed Out")
+        raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
+    
+async def get_audits(request: Request):
+    
+    token = request.headers.get("authorization")
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = token[7:]
+    user_db = get_user_db(token)
+
+    try:
+
+        response = user_db.from_("all files").select('*').order("created_at", desc=True).execute()
+        
+        return response.data
+    
+    except Exception as e:
+        print("Exception:", e)
+        if (e.message == 'JWT expired'):
+            raise HTTPException(status_code=401, detail="User Session Timed Out")
+        raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
+    
+async def delete_files(request: Request):
+    
+    token = request.headers.get("authorization")
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = token[7:]
+    user_db = get_user_db(token)
+
+    data = await request.json()
+    proj_id = data.get("projectID")
+
+    try:
+
+        response = user_db.from_("all files").delete().eq("file_id", proj_id).execute()
+
+        response = user_db.from_("latest files").delete().eq("file_id", proj_id).execute()
+
+        return response.data
+    
+    except Exception as e:
+        print("Exception:", e)
+        if (e.message == 'JWT expired'):
+            raise HTTPException(status_code=401, detail="User Session Timed Out")
+        raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
+    
+async def update_file(request: Request):
+    
+    token = request.headers.get("authorization")
+    if not token or not token.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = token[7:]
+    user_db = get_user_db(token)
+
+    data = await request.json()
+    proj_id = data.get("projectID")
+    proj_type = data.get("type")
+
+    try:
+
+        response = user_db.from_("latest files").update({"project_status": proj_type}).eq("file_id", proj_id).execute()
+
+        return response.data
+    
+    except Exception as e:
+        print("Exception:", e)
+        if (e.message == 'JWT expired'):
+            raise HTTPException(status_code=401, detail="User Session Timed Out")
+        raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
