@@ -18,6 +18,7 @@ from generate_content import (
     no_template_generation
 )
 from editor_functions import transformText, generate_image
+from db_functions import save_draft
 
 app = FastAPI()
 
@@ -212,3 +213,9 @@ async def get_ai_image(req: GenerateReq):
     prompt = req.prompt
     img_dict = generate_image(prompt)
     return JSONResponse(content=img_dict)
+
+@app.post("/save-draft")
+async def save(request: Request):
+    print("request recieved")
+    f_id = await save_draft(request)
+    return {"message": "success", "file_id": f_id}
