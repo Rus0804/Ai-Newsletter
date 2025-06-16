@@ -2,6 +2,7 @@ from fastapi import Header, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 from supabase import create_client, Client, ClientOptions
+from datetime import datetime, timezone
 import requests
 import os
 import dotenv
@@ -15,19 +16,6 @@ service = os.getenv("SUPABASE_SERVICE_KEY")
 def get_user_db(token: str) -> Client:
     opts = ClientOptions(headers=  {"Authorization": f"Bearer {token}"})
     return create_client(url, key, options=opts)
-
-def get_user_id_from_token(authorization: str = Header(...)) -> str:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid Authorization header")
-    
-    token = authorization.removeprefix("Bearer ").strip()
-    
-    try:
-        user_response = db.auth.get_user(token)
-        return user_response.user.id
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Unauthorized: {str(e)}")
-
 
 async def save_draft(request: Request):
     token = request.headers.get("authorization")
@@ -50,6 +38,16 @@ async def save_draft(request: Request):
                 "file_name": filename,
                 "project_data": project,
             }).execute()
+
+            projID = response.data[0]['file_id']
+
+            response = user_db.from_("latest files").insert({
+                "version": vno,
+                "file_id": projID,
+                "file_name": filename,
+                "project_data": project,
+            }).execute()
+
         else:
             response = user_db.from_("all files").insert({
                 "version": vno,
@@ -57,8 +55,17 @@ async def save_draft(request: Request):
                 "file_name": filename,
                 "project_data": project,
             }).execute()
+
+            current_time = datetime.now(timezone.utc)
+
+            response = user_db.from_("latest files").update({
+                "version": vno,
+                "file_name": filename,
+                "project_data": project,
+                "edited_at":  current_time.isoformat()
+            }).eq("file_id", projID).execute()
             
-        return response.data[0]['file_id']
+        return projID
     except Exception as e:
         print("Exception:", e)
         if (e.message == 'JWT expired'):
