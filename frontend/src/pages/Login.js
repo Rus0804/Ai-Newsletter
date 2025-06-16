@@ -30,7 +30,7 @@ function LoginPage() {
       });
 
       const data = await response.json();
-      
+
       if(response.ok){
         if (isSignup) {
           if (password !== confirmPassword) {
@@ -46,6 +46,7 @@ function LoginPage() {
           setPassword("");
           setConfirmPassword("");
         } else {
+          localStorage.setItem('authToken', data.access_token);
           navigate('/')
         }
       } else{

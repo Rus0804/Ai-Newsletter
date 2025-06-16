@@ -76,10 +76,6 @@ def get_user_id_from_token(authorization: str = Header(...)) -> str:
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Unauthorized: {str(e)}")
 
-def get_user_db(token: str) -> Client:
-    opts = ClientOptions(headers=  {"Authorization": f"Bearer {token}"})
-    return create_client(url, key, options=opts)
-
 class ResetPasswordRequest(BaseModel):
     access_token: str
     new_password: str
