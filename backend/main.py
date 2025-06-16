@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import json
+from json.decoder import JSONDecodeError
 import asyncio
 from login_functions import LoginRequest, ResetPasswordRequest, ResetRequest, signup, login, reset_password, request_password_reset 
 from generate_template import convert_pdf_to_html, clean_html, convert_html_to_pdf
@@ -18,7 +19,7 @@ from generate_content import (
     no_template_generation
 )
 from editor_functions import transformText, generate_image
-from db_functions import save_draft
+from db_functions import save_draft, get_audits, get_newsletters, delete_files, update_file
 
 app = FastAPI()
 
@@ -219,3 +220,18 @@ async def save(request: Request):
     print("request recieved")
     f_id = await save_draft(request)
     return {"message": "success", "file_id": f_id}
+
+@app.get("/newsletters")
+async def get_data(request: Request):
+    try:
+        body = await request.json()
+        request_type = body.get("type")
+    except JSONDecodeError:
+        request_type = None
+    
+    if request_type:
+        data = await get_newsletters(request)
+    else:
+        data = await get_audits(request)
+    
+    return data
