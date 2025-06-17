@@ -27,12 +27,17 @@ async def save_draft(request: Request):
     data = await request.json()
     vno = data.get("version")
     filename = data.get("fname")
-    projID = data.get("projID")
+
     project = data.get("projectData")
     html = data.get("html")
 
+    projID = data.get("projID")
+    if projID == 'null':
+        projID = None
+
     try:
         if not projID:
+
             response = user_db.from_("all files").insert({
                 "version": vno,
                 "file_name": filename,
@@ -58,13 +63,13 @@ async def save_draft(request: Request):
 
             current_time = datetime.now(timezone.utc)
 
-            response = user_db.from_("latest files").update({
+            response = user_db.table("latest files").update({
                 "version": vno,
                 "file_name": filename,
                 "project_data": project,
                 "edited_at":  current_time.isoformat()
             }).eq("file_id", projID).execute()
-            
+
         return projID
     except Exception as e:
         print("Exception:", e)
