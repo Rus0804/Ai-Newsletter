@@ -5,6 +5,8 @@ import NewsletterGenerator from "./pages/NewsletterGenerator.js";
 import EditorPage from "./pages/Editor.js";
 import LoginPage from "./pages/Login.js";
 import HomePage from "./pages/Home.js";
+import NewsletterListPage from "./pages/NewsletterList.js";
+import NewsletterDetailPage from "./pages/NewsletterDetails.js";
 
 function Layout({ children }) {
   const location = useLocation();
@@ -13,10 +15,10 @@ function Layout({ children }) {
     const isEditor = location.pathname.startsWith("/editor");
 
     if (!isEditor) {
-      console.log("🧹 Not on editor page — clearing localStorage");
       localStorage.removeItem("projectID");
       localStorage.removeItem("version");
       localStorage.removeItem("filename");
+      localStorage.removeItem("projectData");
     }
   }, [location.pathname]);
 
@@ -32,6 +34,10 @@ function App() {
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/new" element={<NewsletterGenerator />} />
+          <Route path="/drafts" element={<NewsletterListPage type="Draft" label="📝 Drafts" />} />
+          <Route path="/published" element={<NewsletterListPage type="Published" label="✅ Published" />} />
+          <Route path="/archived" element={<NewsletterListPage type="Archive" label="📦 Archived" />} />
+          <Route path="/newsletter/:file_id" element={<NewsletterDetailPage />} />
         </Routes>
       </Layout>
     </Router>
