@@ -22,9 +22,16 @@ function Sidebar() {
           <NavLink to="/new" className="nav-button">
             🆕 New
           </NavLink>
-          <NavLink to="/audits" className="nav-button">
-            📋 Audits
+          <NavLink to="/drafts" className="nav-button">
+            📝 Drafts
           </NavLink>
+          <NavLink to="/published" className="nav-button">
+            ✅ Published
+          </NavLink>
+          <NavLink to="/archived" className="nav-button">
+            📦 Archived
+          </NavLink>
+
         </nav>
 
         <button className="nav-button logout-button" onClick={handleLogout}>
