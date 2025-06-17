@@ -24,10 +24,153 @@
   margin-bottom: 0.5rem;
 }
 
+.section-link {
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+  transition: color 0.3s;
+}
+
+.section-link:hover {
+  color: #4f46e5;
+}
+
+.card-row {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-behavior: smooth;
+}
+
+.card-row::-webkit-scrollbar {
+  height: 6px;
+}
+.card-row::-webkit-scrollbar-thumb {
+  background-color: #4f46e5;
+  border-radius: 3px;
+}
+
 .card {
-  background-color: white;
+  min-width: 220px;
+  background-color: #3b3b53;
+  color: antiquewhite;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 }
+
+.card-subtext {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  color: #cfcfcf;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.audit-table th,
+.audit-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e2e2;
+  text-align: left;
+}
+
+.audit-table th {
+  background-color: #f4f4f4;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-btn:hover {
+  background-color: #3730a3;
+}
+
+.loading-message {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  color: #4f46e5;
+  animation: fade 0.3s ease-in-out;
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+.file-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.file-table th,
+.file-table td {
+  border: 1px solid #ccc;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.file-table th {
+  background-color: #f4f4f4;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.latest-file {
+  background-color: #fefefe;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #a71d2a;
+}
+
