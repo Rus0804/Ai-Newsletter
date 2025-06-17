@@ -38,7 +38,6 @@ function LoginPage() {
             return;
           }
 
-          // Dummy signup logic
           setError("");
           alert("Signup successful. Please login.");
           setIsSignup(false);
