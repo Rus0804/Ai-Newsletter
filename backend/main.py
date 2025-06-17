@@ -19,7 +19,7 @@ from generate_content import (
     no_template_generation
 )
 from editor_functions import transformText, generate_image
-from db_functions import save_draft, get_audits, get_newsletters, delete_files, update_file
+from db_functions import save_draft, get_newsletters, get_all_versions, delete_files, update_file
 
 app = FastAPI()
 
@@ -42,6 +42,7 @@ async def set_signup(request: LoginRequest):
 
 @app.post("/login")
 def set_login(request: LoginRequest):
+    print("login")
     return login(request)
 
 @app.post("/reset-password")
@@ -221,17 +222,18 @@ async def save(request: Request):
     f_id = await save_draft(request)
     return {"message": "success", "file_id": f_id}
 
-@app.get("/newsletters")
+@app.post("/newsletters")
 async def get_data(request: Request):
-    try:
-        body = await request.json()
-        request_type = body.get("type")
-    except JSONDecodeError:
-        request_type = None
-    
-    if request_type:
-        data = await get_newsletters(request)
-    else:
-        data = await get_audits(request)
-    
+    data = await get_newsletters(request)
     return data
+
+@app.post("/newsletter-details")
+async def get_data(request: Request):
+    data = await get_all_versions(request)
+    return data
+
+@app.delete("/newsletter-delete")
+async def delete_data(request: Request):
+    data = await request.json()
+    print(data)
+    return {"message": "hi"}
