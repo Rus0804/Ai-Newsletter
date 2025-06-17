@@ -6,9 +6,8 @@ import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
   const [editorReady, setEditorReady] = useState(null);
-  const [projectName, setProjectName] = useState('Untitled Draft');
+  const [filename, setFilename] = useState(localStorage.getItem('filename') || "Untitled Draft");
 
-  const filename = localStorage.getItem('filename') || null;
 
   const editorRef = useRef(null);
 
@@ -34,9 +33,7 @@ function EditorPage() {
     }
     func()
 
-    if(filename){setProjectName(filename)}
-
-  },[filename, htmlContent]);
+  },[htmlContent]);
 
   const openModal = (component) => {
     setSelectedComponent(component);
@@ -179,6 +176,12 @@ function EditorPage() {
       });
   };
 
+  const handleFilenameChange = (e) => {
+    const newName = e.target.value;
+    localStorage.setItem("filename", newName);
+    setFilename(newName);
+  };
+
   const handleSave = async ({ project }) => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -201,7 +204,7 @@ function EditorPage() {
     const version = parseInt(localStorage.getItem('version')) || 0;
     const projID = localStorage.getItem('projectID');
 
-    const reqbody = {html: fullHtml, projectData: project, fname: projectName, version: version+1, projID: projID}
+    const reqbody = {html: fullHtml, projectData: project, fname: localStorage.getItem("filename"), version: version+1, projID: projID}
 
     try {
       const response = await fetch('http://127.0.0.1:8000/save-draft', {
@@ -224,17 +227,16 @@ function EditorPage() {
         console.log('✅ Received file_id:', data.file_id, version);
         localStorage.setItem('version', version+1);
         localStorage.setItem('projectID', data.file_id);
-        localStorage.setItem('filename', projectName);
 
       } else {
         console.warn('⚠️ file_id was null or undefined');
       }
-  alert('✅ Draft saved successfully!');
-  
-} catch (error) {
-  console.error('❌ Error while saving draft:', error);
-  alert('❌ Failed to save draft. Please try again.');
-}
+    alert('✅ Draft saved successfully!');
+    
+  } catch (error) {
+    console.error('❌ Error while saving draft:', error);
+    alert('❌ Failed to save draft. Please try again.');
+  }
 
   };
 
@@ -254,8 +256,8 @@ function EditorPage() {
       <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5, display: 'flex', alignItems: 'center', gap: '10px' }}>
         <input
           type="text"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
+          value={filename}
+          onChange={handleFilenameChange}
           placeholder="Project Name"
           style={{
             padding: '6px 10px',
