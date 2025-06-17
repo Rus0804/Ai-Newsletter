@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Request, Form, File, UploadFile
-from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, Form, File, UploadFile # type: ignore
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse # type: ignore
+from fastapi.staticfiles import StaticFiles # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from pydantic import BaseModel
 from typing import Optional
 import json
