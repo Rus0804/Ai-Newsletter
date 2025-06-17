@@ -243,6 +243,11 @@ function EditorPage() {
   const handleLoad = async (editorprop) => {
     editorRef.current = editorprop.editor;
     setEditorReady(editorprop.editor)
+    if(localStorage.getItem('projectID')){
+      const projData = JSON.parse(localStorage.getItem('projectData'))
+      editorprop.editor.loadProjectData(projData)
+      return projData;
+    }
     editorprop.editor.loadProjectData({
       pages: [{ name: 'Edit Template', component: htmlContent }],
     })
@@ -284,13 +289,14 @@ function EditorPage() {
         </button>
       </div>
 
-      {htmlContent &&(<StudioEditor
+      <StudioEditor
         options={{
           storage: {
             type: 'self',
             autosaveChanges: 100,
             autosaveIntervalMs: 120000,
             onSave: handleSave,
+            // project: localStorage.getItem('projectData'),
             onLoad: handleLoad,
           },
           
@@ -348,7 +354,7 @@ function EditorPage() {
             },
           ],
         }}
-      />)}
+      />
 
       {/* TEXT MODAL */}
       {modalOpen && (
