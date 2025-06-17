@@ -1,9 +1,6 @@
-from fastapi import Header, Request, HTTPException # type: ignore
-from fastapi.responses import JSONResponse # type: ignore
-from pydantic import BaseModel, EmailStr
+from fastapi import Request, HTTPException # type: ignore
 from supabase import create_client, Client, ClientOptions # type: ignore
 from datetime import datetime, timezone
-import requests
 import os
 import dotenv
 

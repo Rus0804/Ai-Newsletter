@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from pydantic import BaseModel
 from typing import Optional
 import json
-from json.decoder import JSONDecodeError
 import asyncio
 from login_functions import LoginRequest, ResetPasswordRequest, ResetRequest, signup, login, reset_password, request_password_reset 
 from generate_template import convert_pdf_to_html, clean_html, convert_html_to_pdf
