@@ -177,7 +177,7 @@ async def delete_files(request: Request):
 
     try:
         if version != 0:
-            response = (
+            delete_response = (
                 user_db.from_("all files")
                 .delete()
                 .eq("file_id", proj_id)
@@ -186,20 +186,31 @@ async def delete_files(request: Request):
             )
             
             if latest:
-                row = response.data
-                response = (
+                next_latest_response = (
+                    user_db.from_("all files")
+                    .select()
+                    .eq("file_id", proj_id)
+                    .eq("version", version-1)
+                    .execute()
+                )
+                row = next_latest_response.data[0]
+
+                update_response = (
                     user_db.from_("latest files")
                     .update(
                         {
-                            "version": row.version,
-                            "file_name": row.file_name,
-                            "project_data": row.project_data,
-                            "edited_at": row.created_at,
+                            "version": row["version"],
+                            "file_name": row["file_name"],
+                            "project_data": row["project_data"],
+                            "edited_at": row["created_at"],
                         }
                     )
                     .eq("file_id", proj_id)
                     .execute()
                 )
+                return update_response.data
+            else:
+                return delete_response.data
         else:
             response = (
                 user_db.from_("all files")
@@ -213,7 +224,7 @@ async def delete_files(request: Request):
                 .eq("file_id", proj_id)
                 .execute()
             )
-        return response.data
+            return response.data
 
     except Exception as e:
         print("Exception:", e)

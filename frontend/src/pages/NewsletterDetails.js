@@ -73,7 +73,7 @@ function NewsletterDetailPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ "fileID": id, "version": ver, "latest": ind===0 }),
+        body: JSON.stringify({ "fileID": id, "version": files.length ===1?0:ver, "latest": ind===0 }),
       });
 
       if (!response.ok) throw new Error("Failed to delete file");

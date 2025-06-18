@@ -233,6 +233,5 @@ async def get_data(request: Request):
 
 @app.delete("/newsletter-delete")
 async def delete_data(request: Request):
-    data = await request.json()
-    print(data)
-    return {"message": "hi"}
+    data = await delete_files(request)
+    return data
