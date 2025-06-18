@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from openai import OpenAI
+from openai import OpenAI #type: ignore
 import httpx
 from dotenv import load_dotenv
 import os

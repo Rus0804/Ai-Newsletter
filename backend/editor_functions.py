@@ -2,7 +2,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 import base64
-from openai import OpenAI
+from openai import OpenAI #type: ignore
 from dotenv import load_dotenv
 import os
 
