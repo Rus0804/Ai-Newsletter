@@ -6,7 +6,7 @@ import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
   const [editorReady, setEditorReady] = useState(null);
-  const [filename, setFilename] = useState(localStorage.getItem('filename') || "Untitled Draft");
+  const [filename, setFilename] = useState(localStorage.getItem('filename')==='null'? "Untitled Draft": localStorage.getItem('filename'));
 
 
   const editorRef = useRef(null);
@@ -32,7 +32,6 @@ function EditorPage() {
         .catch(console.error);
     }
     func()
-
   },[htmlContent]);
 
   const openModal = (component) => {
@@ -224,10 +223,9 @@ function EditorPage() {
       const data = await response.json();
 
       if (data.file_id) {
-        console.log('✅ Received file_id:', data.file_id, version);
         localStorage.setItem('version', version+1);
         localStorage.setItem('projectID', data.file_id);
-
+        localStorage.setItem('projectData', data.project_data);
       } else {
         console.warn('⚠️ file_id was null or undefined');
       }
@@ -243,7 +241,7 @@ function EditorPage() {
   const handleLoad = async (editorprop) => {
     editorRef.current = editorprop.editor;
     setEditorReady(editorprop.editor)
-    if(localStorage.getItem('projectID')){
+    if(localStorage.getItem('projectID')!=='null' && localStorage.getItem('projectID')){
       const projData = JSON.parse(localStorage.getItem('projectData'))
       editorprop.editor.loadProjectData(projData)
       return projData;
@@ -289,14 +287,13 @@ function EditorPage() {
         </button>
       </div>
 
-      <StudioEditor
+      {(htmlContent || localStorage.getItem('projectID')!=='null') && (<StudioEditor
         options={{
           storage: {
             type: 'self',
             autosaveChanges: 100,
             autosaveIntervalMs: 120000,
             onSave: handleSave,
-            // project: localStorage.getItem('projectData'),
             onLoad: handleLoad,
           },
           
@@ -354,7 +351,7 @@ function EditorPage() {
             },
           ],
         }}
-      />
+      />)}
 
       {/* TEXT MODAL */}
       {modalOpen && (
