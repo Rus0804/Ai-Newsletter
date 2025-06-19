@@ -7,6 +7,9 @@ function NewsletterDetailPage() {
   const { file_id } = useParams();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newFileName, setNewFileName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [status, setStatus] = useState(localStorage.getItem("status"));
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,16 +56,15 @@ function NewsletterDetailPage() {
   }, [file_id]);
 
   const handleEdit = (file) => {
-    localStorage.setItem('projectID', file.file_id);
-    localStorage.setItem('filename', file.file_name);
-    localStorage.setItem('version', file.version);
-    localStorage.setItem('projectData', JSON.stringify(file.project_data));
-    navigate('/editor');
+    localStorage.setItem("projectID", file.file_id);
+    localStorage.setItem("filename", file.file_name);
+    localStorage.setItem("version", file.version);
+    localStorage.setItem("projectData", JSON.stringify(file.project_data));
+    navigate("/editor");
   };
 
   const handleDelete = async (id, ver, ind) => {
     const token = localStorage.getItem("authToken");
-    console.log(ind)
     const confirm = window.confirm("Are you sure you want to delete this file?");
     if (!confirm) return;
 
@@ -73,7 +75,11 @@ function NewsletterDetailPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ "fileID": id, "version": files.length ===1?0:ver, "latest": ind===0 }),
+        body: JSON.stringify({
+          fileID: id,
+          version: files.length === 1 ? 0 : ver,
+          latest: ind === 0,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to delete file");
@@ -85,16 +91,112 @@ function NewsletterDetailPage() {
     }
   };
 
+  const handleRename = async (file) => {
+    const token = localStorage.getItem("authToken");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/newsletter-rename", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ file_id: file.file_id, file_name: newFileName }),
+      });
+
+      if (!response.ok) throw new Error("Failed to rename file");
+
+      setFiles((prevFiles) =>
+        prevFiles.map((f) =>
+          f.version === 0 ? { ...f, file_name: newFileName } : f
+        )
+      );
+      setIsRenaming(false);
+      setNewFileName("");
+    } catch (err) {
+      console.error("Rename error:", err);
+      alert("Failed to rename file");
+    }
+  };
+
+  const handleStatusChange = async (e, file) => {
+    const newStatus = e.target.value;
+    setStatus(newStatus);
+    const token = localStorage.getItem("authToken");
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/newsletter-status-update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ file_id: file.file_id, project_status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update status");
+      localStorage.setItem("status", newStatus)
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert("Failed to update status");
+    }
+  };
+
   const renderLatestFileInfo = (file) => (
     <div className="latest-file">
       <h2>🆕 Latest Version</h2>
-      <p><strong>File Name:</strong> {file.file_name}</p>
+
+      <p>
+        <strong>File Name:</strong>{" "}
+        {isRenaming ? (
+          <>
+            <input
+              type="text"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              placeholder="Enter new file name"
+              style={{ marginRight: "8px" }}
+            />
+            <button onClick={() => handleRename(file)}>Save</button>
+            <button onClick={() => { setIsRenaming(false); setNewFileName(""); }} style={{ marginLeft: "4px" }}>
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            {file.file_name}{" "}
+            <button onClick={() => { setNewFileName(file.file_name); setIsRenaming(true); }} style={{ marginLeft: "10px" }}>
+              Rename
+            </button>
+          </>
+        )}
+      </p>
+
       <p><strong>Version:</strong> {file.version}</p>
+      <p>
+        <strong>Status:</strong>{" "}
+        <select 
+          value={status} 
+          onChange={(e) => handleStatusChange(e, file)}
+          style={{
+            padding: "5px 10px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            marginLeft: "10px",
+            backgroundColor: "#f9f9f9",
+            fontWeight: "bold"
+          }}
+        >
+          <option value="Draft">Draft</option>
+          <option value="Published">Published</option>
+          <option value="Archive">Archive</option>
+        </select>
+      </p>
       <p><strong>Created:</strong> {new Date(file.created_at).toLocaleString()}</p>
+
       <button
         className="delete-btn"
         onClick={() => handleDelete(file.file_id, 0, 0)}
-        style={{ marginTop: '10px' }}
+        style={{ marginTop: "10px" }}
       >
         Delete All
       </button>
@@ -119,8 +221,12 @@ function NewsletterDetailPage() {
             <td>{file.file_name}</td>
             <td>{file.version}</td>
             <td>{new Date(file.created_at).toLocaleString()}</td>
-            <td><button className="edit-btn" onClick={() => handleEdit(file)}>Edit</button></td>
-            <td><button className="delete-btn" onClick={() => handleDelete(file.file_id, file.version, index)}>Delete</button></td>
+            <td>
+              <button className="edit-btn" onClick={() => handleEdit(file)}>Edit</button>
+            </td>
+            <td>
+              <button className="delete-btn" onClick={() => handleDelete(file.file_id, file.version, index)}>Delete</button>
+            </td>
           </tr>
         ))}
       </tbody>
