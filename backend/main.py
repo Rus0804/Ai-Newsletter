@@ -1,3 +1,9 @@
+import sys
+import asyncio
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from fastapi import FastAPI, Request, Form, File, UploadFile # type: ignore
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse # type: ignore
 from fastapi.staticfiles import StaticFiles # type: ignore
@@ -23,7 +29,16 @@ from db_functions import save_draft, get_newsletters, get_all_versions, delete_f
 app = FastAPI()
 
 # Mount static file route
-app.mount("/html", StaticFiles(directory="generated-html"), name="html")
+
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+app.mount("/html", NoCacheStaticFiles(directory="generated-html"), name="html")
 
 # Allow CORS from your frontend (adjust origin as needed)
 app.add_middleware(
@@ -234,4 +249,14 @@ async def get_data(request: Request):
 @app.delete("/newsletter-delete")
 async def delete_data(request: Request):
     data = await delete_files(request)
+    return data
+
+@app.put("/newsletter-rename")
+async def rename_file(request: Request):
+    data = await update_file(request, "file_name")
+    return data
+
+@app.put("/newsletter-status-update")
+async def update_file_status(request: Request):
+    data = await update_file(request, "project_status")
     return data
