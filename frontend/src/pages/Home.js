@@ -83,8 +83,18 @@ function HomePage() {
       <div
         key={index}
         className="card clickable"
-        onClick={() => navigate(`/newsletter/${item.file_id}`)}
+        onClick={() => {
+          localStorage.setItem("status", item.project_status)
+          navigate(`/newsletter/${item.file_id}`);
+        }}
       >
+        {item.thumbnail_url && (
+          <img
+            src={item.thumbnail_url}
+            alt={`${item.file_name} thumbnail`}
+            className="card-thumbnail"
+          />
+        )}
         <strong>{item.file_name}</strong>
         <div className="card-subtext">Version: {item.version || "N/A"}</div>
         <div className="card-subtext">

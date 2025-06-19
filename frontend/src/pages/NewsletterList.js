@@ -55,6 +55,7 @@ function NewsletterListPage({ type, label }) {
   }, [type]);
 
   const handleCardClick = (file_id) => {
+    localStorage.setItem("status", type)
     navigate(`/newsletter/${file_id}`);
   };
 
@@ -75,6 +76,13 @@ function NewsletterListPage({ type, label }) {
                 className="card clickable"
                 onClick={() => handleCardClick(item.file_id)}
               >
+                {item.thumbnail_url && (
+                  <img
+                    src={item.thumbnail_url}
+                    alt={`${item.file_name} thumbnail`}
+                    className="card-thumbnail"
+                  />
+                )}
                 <strong>{item.file_name}</strong>
                 <div className="card-subtext">
                   Version: {item.version || "N/A"}
