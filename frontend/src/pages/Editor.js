@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import StudioEditor from '@grapesjs/studio-sdk/react';
 import '@grapesjs/studio-sdk/style';
 import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
+import './Editor.css'
 
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
@@ -225,7 +226,7 @@ function EditorPage() {
       if (data.file_id) {
         localStorage.setItem('version', version+1);
         localStorage.setItem('projectID', data.file_id);
-        localStorage.setItem('projectData', data.project_data);
+        localStorage.setItem('projectData', JSON.stringify(project));
       } else {
         console.warn('⚠️ file_id was null or undefined');
       }
@@ -256,38 +257,30 @@ function EditorPage() {
 
   return (
     <div style={{ height: '100vh' }}>
-      <div style={{ position: 'absolute', top: 5.3, left: 300, zIndex: 5, display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="editor-header">
         <input
           type="text"
           value={filename}
           onChange={handleFilenameChange}
           placeholder="Project Name"
-          style={{
-            padding: '6px 10px',
-            fontSize: '14px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            width: '200px'
-          }}
+          className="filename-input"
         />
         <button
           onClick={() => (editorReady && exportToPDF(editorReady))}
-          style={{
-            padding: '6px 12px',
-            fontSize: '14px',
-            backgroundColor: '#7E57C2', // Purple
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          }}
+          className="export-button"
         >
           Export to PDF
+        </button>
+        <button
+          onClick={() => window.location.href = "/home"}
+          className="go-home-button"
+        >
+          Go Home
         </button>
       </div>
 
       {(htmlContent || localStorage.getItem('projectID')!=='null') && (<StudioEditor
+
         options={{
           storage: {
             type: 'self',
@@ -356,29 +349,12 @@ function EditorPage() {
       {/* TEXT MODAL */}
       {modalOpen && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999,
-          }}
+          className="modal-backdrop"
           onClick={closeModal}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: 8,
-              padding: 20,
-              width: 320,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
+            className="modal-content"
           >
             <h3 style={{ margin: 0 }}>Select Tone</h3>
             <select
@@ -434,29 +410,12 @@ function EditorPage() {
       {/* IMAGE MODAL */}
       {imageModalOpen && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999,
-          }}
+          className="modal-backdrop"
           onClick={closeImageModal}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: 8,
-              padding: 20,
-              width: 320,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
+            className="modal-content"
           >
             <h3 style={{ margin: 0 }}>Enter Image Prompt</h3>
             <textarea
