@@ -37,7 +37,6 @@ function LoginPage() {
             setError("Passwords do not match.");
             return;
           }
-
           setError("");
           alert("Signup successful. Please login.");
           setIsSignup(false);
@@ -46,7 +45,7 @@ function LoginPage() {
           setConfirmPassword("");
         } else {
           localStorage.setItem('authToken', data.access_token);
-          navigate('/')
+          navigate('/home')
         }
       } else{
         var err = data.message;
@@ -55,13 +54,9 @@ function LoginPage() {
         }
         setError(err || 'Something went wrong');
       }
-
     } catch (err) {
       setError('Network error. Please try again later.');
-    }
-
-
-    
+    }    
   };
 
   return (

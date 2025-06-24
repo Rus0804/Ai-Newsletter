@@ -16,7 +16,7 @@ function Sidebar() {
 
       <div className="sidebar-content">
         <nav className="nav-links">
-          <NavLink to="/" end className="nav-button">
+          <NavLink to="/home" end className="nav-button">
             🏠 Home
           </NavLink>
           <NavLink to="/new" className="nav-button">
