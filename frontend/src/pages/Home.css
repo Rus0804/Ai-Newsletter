@@ -65,41 +65,6 @@
   color: #cfcfcf;
 }
 
-.audit-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.audit-table th,
-.audit-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e2e2;
-  text-align: left;
-}
-
-.audit-table th {
-  background-color: #f4f4f4;
-  font-weight: 600;
-}
-
-.edit-btn {
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.edit-btn:hover {
-  background-color: #3730a3;
-}
-
 .loading-message {
   margin-top: 2rem;
   font-size: 1.2rem;
@@ -120,58 +85,6 @@
 .card.clickable:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-
-.file-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.file-table th,
-.file-table td {
-  border: 1px solid #ccc;
-  padding: 0.75rem;
-  text-align: left;
-}
-
-.file-table th {
-  background-color: #f4f4f4;
-}
-
-.edit-btn {
-  background-color: #007bff;
-  color: white;
-  padding: 0.4rem 0.7rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.edit-btn:hover {
-  background-color: #0056b3;
-}
-
-.latest-file {
-  background-color: #fefefe;
-  border: 1px solid #ccc;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-}
-
-.delete-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 0.4rem 0.7rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.delete-btn:hover {
-  background-color: #a71d2a;
 }
 
 .card-thumbnail {
