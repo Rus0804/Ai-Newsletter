@@ -7,6 +7,7 @@ import os
 load_dotenv()
 
 API_KEY = os.getenv("OPENROUTER_API_KEY_2")
+GEMINI_KEY = os.getenv("GEMINI_KEY")
 
 def remove_images_and_styles(filename):
     try:
@@ -48,8 +49,8 @@ def get_content(template, formalised_content):
     prompt = f"{formalised_content}\nReplace the template text with the newsletter ONLY REPLACE THE TEMPLATE STRINGS DO NOT ADD OR REMOVE STYLES OR TAGS " + str(template.body)
 
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=API_KEY,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        api_key=GEMINI_KEY,
         timeout = 60
     )
 
@@ -62,7 +63,7 @@ def get_content(template, formalised_content):
 
     try:
         llm_output = client.chat.completions.create(
-            model="deepseek/deepseek-chat-v3-0324:free",
+            model="gemini-2.5-flash",
             extra_headers = headers,
             messages=[
                 {"role": "user", "content": prompt}
@@ -180,10 +181,8 @@ def no_template_generation(user_prompt, topic, tone):
     html_string = ""
     while(not isHTML(html_string)):
         generate_template=f"""Generate a visually appealing, responsive HTML newsletter layout approximately 790px wide and 1250px tall, using a professional
-        design with clear structure and consistent spacing. Randomly choose one layout style from: hero-first, card-style, stacked-content, column-grid, 
-        sidebar-left, or sidebar-right. Include the following: a company logo and name (top-left or centered), a navigation bar with 3–5 links, a hero section
-        with heading, subtitle, and CTA button, alternating image-text blocks, a motivational quote or announcement, an optional sidebar (left, right, or 
-        omitted), and a footer with social media icons and legal text. Use a randomly generated but cohesive color scheme and font pairing (serif/sans-serif) 
+        design with clear structure and consistent spacing. Include the following: a company logo and name (top-left or centered), a navigation bar with 3–5 links, a hero section
+        with heading, subtitle, and CTA button and a footer with social media icons and legal text. Use a randomly generated but cohesive color scheme and font pairing (serif/sans-serif) 
         to ensure visual appeal and contrast. Apply a single <style> tag at the top, no <html>, <head>, or <body> tags. Ensure layout is clean, well-aligned, 
         and compatible with the GrapesJS editor — avoid floating or overlapping elements. Use div-based layout (not table-based) and insert placeholder images
         from https://via.placeholder.com/. Do **not** use placeholder or filler text like “Lorem Ipsum”; leave text sections empty or insert meaningful user-
@@ -191,9 +190,14 @@ def no_template_generation(user_prompt, topic, tone):
         with embedded CSS in a single <style> tag, no explanations or comments.
 
     """
+        client = OpenAI(
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            api_key=GEMINI_KEY,
+            timeout = 60
+        )
         
         html_response = client.chat.completions.create(
-        model="deepseek/deepseek-chat-v3-0324:free",
+        model="gemini-2.5-flash",
         messages=[
             {
             "role": "user",
