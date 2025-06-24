@@ -1,61 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "./Home.css";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 function NewsletterListPage({ type, label }) {
-  const [newsletters, setNewsletters] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const token = localStorage.getItem("authToken");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
+  const {
+    data: newsletters = [],
+    isLoading: loading,
+  } = useQuery({
+    queryKey: ['newsletters', type],
+    queryFn: async () => {
+      const response = await fetch("http://127.0.0.1:8000/newsletters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type }),
+      });
 
-    setLoading(true);
-    setNewsletters([]);
+      if (!response.ok) throw new Error("Failed to fetch newsletters");
 
-    const token = localStorage.getItem("authToken");
+      return response.json();
+    },
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
 
-    const fetchNewsletters = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/newsletters", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ type }),
-          signal,
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch newsletters");
-
-        const data = await response.json();
-        setNewsletters(data);
-      } catch (err) {
-        if (err.name === "AbortError") {
-          console.log("Fetch aborted");
-          return;
-        }
-        console.error("Error:", err);
-        setNewsletters([]);
-      } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
+   useEffect(() => {
+      const refetchArray = JSON.parse(localStorage.getItem("shouldRefetch"))
+      const typeInd = {"Draft": 0, "Published": 1, "Archive": 2}
+      if (refetchArray) {
+        if(refetchArray[typeInd.type]){queryClient.invalidateQueries({ queryKey: ["newsletters", type] });}
+        localStorage.removeItem("shouldRefetch");
       }
-    };
-
-    fetchNewsletters();
-
-    return () => {
-      controller.abort(); // ✅ Cancel fetch on unmount
-    };
-  }, [type]);
+    }, [queryClient, type]);
+  
 
   const handleCardClick = (file_id) => {
-    localStorage.setItem("status", type)
+    localStorage.setItem("status", type);
     navigate(`/newsletter/${file_id}`);
   };
 

@@ -1,82 +1,71 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Sidebar from "./Sidebar.js";
 import "./Home.css";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+const fetchNewsletters = async (type) => {
+  const token = localStorage.getItem("authToken");
+  const response = await fetch("http://127.0.0.1:8000/newsletters", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ type }),
+  });
+  if (!response.ok) throw new Error(`Failed to fetch ${type}`);
+  return response.json();
+};
 
 function HomePage() {
-  const [drafts, setDrafts] = useState([]);
-  const [published, setPublished] = useState([]);
-  const [archived, setArchived] = useState([]);
-
-  const [loadingDrafts, setLoadingDrafts] = useState(true);
-  const [loadingPublished, setLoadingPublished] = useState(true);
-  const [loadingArchived, setLoadingArchived] = useState(true);
-
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const {
+    data: drafts = [],
+    isLoading: loadingDrafts,
+    isFetching: fetchingDrafts,
+  } = useQuery({
+    queryKey: ['newsletters', 'Draft'],
+    queryFn: () => fetchNewsletters('Draft'),
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
+
+  const {
+    data: published = [],
+    isLoading: loadingPublished,
+    isFetching: fetchingPublished,
+  } = useQuery({
+    queryKey: ['newsletters', 'Published'],
+    queryFn: () => fetchNewsletters('Published'),
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
+
+  const {
+    data: archived = [],
+    isLoading: loadingArchived,
+    isFetching: fetchingArchived,
+  } = useQuery({
+    queryKey: ['newsletters', 'Archive'],
+    queryFn: () => fetchNewsletters('Archive'),
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
 
   useEffect(() => {
-    const controllers = {
-      Draft: new AbortController(),
-      Published: new AbortController(),
-      Archive: new AbortController(),
-    };
-
-    const token = localStorage.getItem("authToken");
-
-    const fetchNewsletters = async (type, setter, setLoading, signal) => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://127.0.0.1:8000/newsletters", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ type }),
-          signal,
-        });
-
-        if (!response.ok) throw new Error(`Failed to fetch ${type}`);
-        const data = await response.json();
-        setter(data);
-      } catch (err) {
-        if (err.name === "AbortError") {
-          console.log(`Aborted fetch for ${type}`);
-          return
-        } else {
-          console.error(err);
-          setter([]);
-        }
-      } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchNewsletters(
-      "Draft",
-      setDrafts,
-      setLoadingDrafts,
-      controllers.Draft.signal
-    );
-    fetchNewsletters(
-      "Published",
-      setPublished,
-      setLoadingPublished,
-      controllers.Published.signal
-    );
-    fetchNewsletters(
-      "Archive",
-      setArchived,
-      setLoadingArchived,
-      controllers.Archive.signal
-    );
-
-    return () => {
-      Object.values(controllers).forEach((ctrl) => ctrl.abort());
-    };
-  }, []);
+    console.log(localStorage.getItem("shouldRefetch"))
+    const refetchArray = JSON.parse(localStorage.getItem("shouldRefetch"))
+    console.log(refetchArray)
+    if (refetchArray) {
+      if(refetchArray[0]){queryClient.invalidateQueries({ queryKey: ["newsletters", "Draft"] });}
+      if(refetchArray[1]){queryClient.invalidateQueries({ queryKey: ["newsletters", "Published"] });}
+      if(refetchArray[2]){queryClient.invalidateQueries({ queryKey: ["newsletters", "Archive"] });}
+      localStorage.removeItem("shouldRefetch");
+    }
+  }, [queryClient]);
 
   const renderCards = (data) =>
     data.map((item, index) => (
@@ -84,7 +73,7 @@ function HomePage() {
         key={index}
         className="card clickable"
         onClick={() => {
-          localStorage.setItem("status", item.project_status)
+          localStorage.setItem("status", item.project_status);
           navigate(`/newsletter/${item.file_id}`);
         }}
       >
@@ -101,6 +90,7 @@ function HomePage() {
           Last edited:{" "}
           {new Date(item.edited_at || item.created_at).toLocaleString()}
         </div>
+        
       </div>
     ));
 
@@ -112,12 +102,12 @@ function HomePage() {
 
         <div className="row-section">
           <h2>
-            <Link to="/drafts" className="section-link">
-              📝 Drafts
-            </Link>
+            <Link to="/drafts" className="section-link">📝 Drafts</Link>
           </h2>
           {loadingDrafts ? (
             <div className="loading-message">Loading drafts...</div>
+          ) : fetchingDrafts ? (
+            <div className="loading-message">Refreshing drafts...</div>
           ) : drafts.length === 0 ? (
             <div className="card">No drafts found</div>
           ) : (
@@ -127,12 +117,12 @@ function HomePage() {
 
         <div className="row-section">
           <h2>
-            <Link to="/published" className="section-link">
-              ✅ Published
-            </Link>
+            <Link to="/published" className="section-link">✅ Published</Link>
           </h2>
           {loadingPublished ? (
             <div className="loading-message">Loading published...</div>
+          ) : fetchingPublished ? (
+            <div className="loading-message">Refreshing published...</div>
           ) : published.length === 0 ? (
             <div className="card">No published newsletters</div>
           ) : (
@@ -142,12 +132,12 @@ function HomePage() {
 
         <div className="row-section">
           <h2>
-            <Link to="/archived" className="section-link">
-              📦 Archived
-            </Link>
+            <Link to="/archived" className="section-link">📦 Archived</Link>
           </h2>
           {loadingArchived ? (
             <div className="loading-message">Loading archived...</div>
+          ) : fetchingArchived ? (
+            <div className="loading-message">Refreshing archived...</div>
           ) : archived.length === 0 ? (
             <div className="card">No archived newsletters</div>
           ) : (
