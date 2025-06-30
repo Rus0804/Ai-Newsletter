@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import Sidebar from "../components/Sidebar.js";
+import SessionDialogBox from "../components/SessionoverBox.js";
 import "./Home.css";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -8,6 +9,7 @@ function NewsletterListPage({ type, label }) {
   const navigate = useNavigate();
   const token = localStorage.getItem("authToken");
   const queryClient = useQueryClient();
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const {
     data: newsletters = [],
@@ -24,6 +26,10 @@ function NewsletterListPage({ type, label }) {
         body: JSON.stringify({ type }),
       });
 
+      if (response.status === 401) {
+        setShowSessionDialog(true); // open session timeout dialog
+        throw new Error("unauthorized");
+      }
       if (!response.ok) throw new Error("Failed to fetch newsletters");
 
       return response.json();
@@ -84,6 +90,7 @@ function NewsletterListPage({ type, label }) {
           </div>
         )}
       </div>
+      {showSessionDialog && <SessionDialogBox />}
     </div>
   );
 }

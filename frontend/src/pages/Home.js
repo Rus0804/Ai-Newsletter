@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Sidebar from "./Sidebar.js";
+import Sidebar from "../components/Sidebar.js";
+import SessionDialogBox from "../components/SessionoverBox.js";
 import "./Home.css";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const fetchNewsletters = async (type) => {
+const fetchNewsletters = async (type, setShowSessionDialog) => {
   const token = localStorage.getItem("authToken");
+
   const response = await fetch("http://127.0.0.1:8000/newsletters", {
     method: "POST",
     headers: {
@@ -14,13 +16,22 @@ const fetchNewsletters = async (type) => {
     },
     body: JSON.stringify({ type }),
   });
+
+  if (response.status === 401) {
+    setShowSessionDialog(true); // open session timeout dialog
+    throw new Error("unauthorized");
+  }
+
   if (!response.ok) throw new Error(`Failed to fetch ${type}`);
+
   return response.json();
 };
+
 
 function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const {
     data: drafts = [],
@@ -28,7 +39,7 @@ function HomePage() {
     isFetching: fetchingDrafts,
   } = useQuery({
     queryKey: ['newsletters', 'Draft'],
-    queryFn: () => fetchNewsletters('Draft'),
+    queryFn: () => fetchNewsletters('Draft', setShowSessionDialog),
     staleTime: Infinity,
     cacheTime: Infinity,
   });
@@ -39,7 +50,7 @@ function HomePage() {
     isFetching: fetchingPublished,
   } = useQuery({
     queryKey: ['newsletters', 'Published'],
-    queryFn: () => fetchNewsletters('Published'),
+    queryFn: () => fetchNewsletters('Published', setShowSessionDialog),
     staleTime: Infinity,
     cacheTime: Infinity,
   });
@@ -50,7 +61,7 @@ function HomePage() {
     isFetching: fetchingArchived,
   } = useQuery({
     queryKey: ['newsletters', 'Archive'],
-    queryFn: () => fetchNewsletters('Archive'),
+    queryFn: () => fetchNewsletters('Archive', setShowSessionDialog),
     staleTime: Infinity,
     cacheTime: Infinity,
   });
@@ -145,6 +156,7 @@ function HomePage() {
           )}
         </div>
       </div>
+      {showSessionDialog && <SessionDialogBox />}
     </div>
   );
 }
