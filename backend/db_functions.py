@@ -123,7 +123,7 @@ async def save_draft(request: Request):
         return projID
     except Exception as e:
         print("Exception:", e)
-        if e.message == "JWT expired":
+        if "JWT expired" in str(e):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
 
@@ -154,14 +154,14 @@ async def get_newsletters(request: Request):
         for i in range(len(rows)):
             path = rows[i]["thumbnail_path"]
             if path:
-                url = user_db.storage.from_("newsletter-thumbnails").get_public_url(path)
+                url = user_db.storage.from_("newsletter-thumbnails").get_public_url(path = path, options = {"download": False})
                 rows[i]["thumbnail_url"] = url
 
         return rows
 
     except Exception as e:
         print("Exception:", e)
-        if e.message == "JWT expired":
+        if "JWT expired" in str(e):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
 
@@ -191,7 +191,7 @@ async def get_all_versions(request: Request):
 
     except Exception as e:
         print("Exception:", e)
-        if e.message == "JWT expired":
+        if "JWT expired" in str(e):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
 
@@ -260,7 +260,7 @@ async def delete_files(request: Request):
 
     except Exception as e:
         print("Exception:", e)
-        if e.message == "JWT expired":
+        if "JWT expired" in str(e):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
 
@@ -300,6 +300,6 @@ async def update_file(request: Request, column: str):
 
     except Exception as e:
         print("Exception:", e)
-        if e.message == "JWT expired":
+        if "JWT expired" in str(e):
             raise HTTPException(status_code=401, detail="User Session Timed Out")
         raise HTTPException(status_code=500, detail=f"Failed to create save: {str(e)}")
