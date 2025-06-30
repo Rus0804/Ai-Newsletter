@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./NewsletterGenerator.css";
-import Sidebar from "./Sidebar.js";
+import Sidebar from "../components/Sidebar.js";
 
 function NewsletterGenerator() {
   const [topic, setTopic] = useState("");
@@ -199,12 +199,7 @@ function NewsletterGenerator() {
 
       {htmlFilePath && (
         <div className="view-button-container">
-          <button
-            onClick={() => navigate(htmlFilePath)}
-            className="view-button"
-          >
-            🌐 View Newsletter
-          </button>
+          
           <button
             onClick={handleExportPdf}
             className="download-button"
