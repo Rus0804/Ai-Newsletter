@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import "./Home.css";
+import Sidebar from "../components/Sidebar.js";
+import SessionDialogBox from "../components/SessionoverBox.js";
+import "./NewsletterDetails.css";
+import { useQueryClient } from '@tanstack/react-query';
 
 function NewsletterDetailPage() {
   const { file_id } = useParams();
@@ -10,7 +12,14 @@ function NewsletterDetailPage() {
   const [newFileName, setNewFileName] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [status, setStatus] = useState(localStorage.getItem("status"));
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient()
+
+  const newsletterData = queryClient.getQueryData(['newsletters', status]);
+
+  const thumbnail = newsletterData?.find(f => f.file_id === file_id).thumbnail_url;
+  console.log("thumbnail:", thumbnail)
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -29,6 +38,11 @@ function NewsletterDetailPage() {
           body: JSON.stringify({ file_id }),
           signal,
         });
+
+        if (response.status === 401) {
+          setShowSessionDialog(true); // open session timeout dialog
+          throw new Error("unauthorized");
+        }
 
         if (!response.ok) throw new Error("Failed to fetch newsletter details");
 
@@ -82,9 +96,16 @@ function NewsletterDetailPage() {
         }),
       });
 
+      if (response.status === 401) {
+        setShowSessionDialog(true); // open session timeout dialog
+        throw new Error("unauthorized");
+      }
+
+
       if (!response.ok) throw new Error("Failed to delete file");
 
       setFiles((prev) => prev.filter((f) => f.version !== ver));
+      localStorage.setItem("shouldRefetch", `[${status==='Draft'}, ${status==='Published'}, ${status==='Archive'}]`);
     } catch (err) {
       console.error("Delete error:", err);
       alert("Failed to delete file");
@@ -103,15 +124,21 @@ function NewsletterDetailPage() {
         body: JSON.stringify({ file_id: file.file_id, file_name: newFileName }),
       });
 
+      if (response.status === 401) {
+        setShowSessionDialog(true); // open session timeout dialog
+        throw new Error("unauthorized");
+      }
+
       if (!response.ok) throw new Error("Failed to rename file");
 
       setFiles((prevFiles) =>
         prevFiles.map((f) =>
-          f.version === 0 ? { ...f, file_name: newFileName } : f
+          f.version === file.version ? { ...f, file_name: newFileName } : f
         )
       );
       setIsRenaming(false);
       setNewFileName("");
+      localStorage.setItem("shouldRefetch", `[${status==='Draft'}, ${status==='Published'}, ${status==='Archive'}]`);
     } catch (err) {
       console.error("Rename error:", err);
       alert("Failed to rename file");
@@ -120,7 +147,6 @@ function NewsletterDetailPage() {
 
   const handleStatusChange = async (e, file) => {
     const newStatus = e.target.value;
-    setStatus(newStatus);
     const token = localStorage.getItem("authToken");
 
     try {
@@ -133,8 +159,16 @@ function NewsletterDetailPage() {
         body: JSON.stringify({ file_id: file.file_id, project_status: newStatus }),
       });
 
+      if (response.status === 401) {
+        setShowSessionDialog(true); // open session timeout dialog
+        throw new Error("unauthorized");
+      }
+
       if (!response.ok) throw new Error("Failed to update status");
+      setStatus(newStatus);
       localStorage.setItem("status", newStatus)
+      localStorage.setItem("shouldRefetch", `[${status==='Draft' || newStatus==='Draft'}, ${status==='Published'|| newStatus==='Published'}, ${status==='Archive'|| newStatus==='Archive'}]`);
+      alert("Status Changed Successfully")
     } catch (err) {
       console.error("Status update error:", err);
       alert("Failed to update status");
@@ -143,64 +177,74 @@ function NewsletterDetailPage() {
 
   const renderLatestFileInfo = (file) => (
     <div className="latest-file">
-      <h2>🆕 Latest Version</h2>
+      {thumbnail && (
+        <img
+          src={thumbnail}
+          alt="Thumbnail"
+          className="thumbnail-img"
+        />
+      )}
 
-      <p>
-        <strong>File Name:</strong>{" "}
-        {isRenaming ? (
-          <>
-            <input
-              type="text"
-              value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
-              placeholder="Enter new file name"
-              style={{ marginRight: "8px" }}
-            />
-            <button onClick={() => handleRename(file)}>Save</button>
-            <button onClick={() => { setIsRenaming(false); setNewFileName(""); }} style={{ marginLeft: "4px" }}>
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            {file.file_name}{" "}
-            <button onClick={() => { setNewFileName(file.file_name); setIsRenaming(true); }} style={{ marginLeft: "10px" }}>
-              Rename
-            </button>
-          </>
-        )}
-      </p>
+      <div className="latest-info">
+        <h2>🆕 Latest Version</h2>
 
-      <p><strong>Version:</strong> {file.version}</p>
-      <p>
-        <strong>Status:</strong>{" "}
-        <select 
-          value={status} 
-          onChange={(e) => handleStatusChange(e, file)}
-          style={{
-            padding: "5px 10px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            marginLeft: "10px",
-            backgroundColor: "#f9f9f9",
-            fontWeight: "bold"
-          }}
+        <p>
+          <strong>File Name:</strong>{" "}
+          {isRenaming ? (
+            <>
+              <input
+                type="text"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                placeholder="Enter new file name"
+                style={{ marginRight: "8px" }}
+              />
+              <button onClick={() => handleRename(file)}>Save</button>
+              <button onClick={() => { setIsRenaming(false); setNewFileName(""); }} style={{ marginLeft: "4px" }}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              {file.file_name}{" "}
+              <button onClick={() => { setNewFileName(file.file_name); setIsRenaming(true); }} style={{ marginLeft: "10px" }}>
+                Rename
+              </button>
+            </>
+          )}
+        </p>
+
+        <p><strong>Version:</strong> {file.version}</p>
+        <p>
+          <strong>Status:</strong>{" "}
+          <select 
+            value={status} 
+            onChange={(e) => handleStatusChange(e, file)}
+            style={{
+              padding: "5px 10px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              marginLeft: "10px",
+              backgroundColor: "#f9f9f9",
+              fontWeight: "bold"
+            }}
+          >
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+            <option value="Archive">Archive</option>
+          </select>
+        </p>
+        <p><strong>Created:</strong> {new Date(file.created_at).toLocaleString()}</p>
+
+        <button
+          className="delete-btn"
+          onClick={() => handleDelete(file.file_id, 0, 0)}
+          style={{ marginTop: "10px" }}
         >
-          <option value="Draft">Draft</option>
-          <option value="Published">Published</option>
-          <option value="Archive">Archive</option>
-        </select>
-      </p>
-      <p><strong>Created:</strong> {new Date(file.created_at).toLocaleString()}</p>
-
-      <button
-        className="delete-btn"
-        onClick={() => handleDelete(file.file_id, 0, 0)}
-        style={{ marginTop: "10px" }}
-      >
-        Delete All
-      </button>
-      <hr />
+          Delete All
+        </button>
+        <hr />
+      </div>
     </div>
   );
 
@@ -234,15 +278,18 @@ function NewsletterDetailPage() {
   );
 
   return (
-    <div className="home-container">
-      <Sidebar />
-      <div className="main-content">
+    <div className="newsletter-container">
+      
+      <div className="sidebar">
+        <Sidebar />
+      </div>
+      <div className="newsletter-main">
         <h1 className="home-title">📄 File History for ID: {file_id}</h1>
 
         {loading ? (
           <div className="loading-message">Loading details...</div>
         ) : files.length === 0 ? (
-          <div className="card">No files found for this ID.</div>
+          <div className="error-card">No files found for this ID.</div>
         ) : (
           <>
             {renderLatestFileInfo(files[0])}
@@ -250,6 +297,7 @@ function NewsletterDetailPage() {
           </>
         )}
       </div>
+      {showSessionDialog && <SessionDialogBox />}
     </div>
   );
 }

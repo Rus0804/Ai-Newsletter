@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import StudioEditor from '@grapesjs/studio-sdk/react';
 import '@grapesjs/studio-sdk/style';
 import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
+import SessionDialogBox from '../components/SessionoverBox';
 import './Editor.css'
 
 function EditorPage() {
   const [htmlContent, setHtmlContent] = useState(null);
   const [editorReady, setEditorReady] = useState(null);
   const [filename, setFilename] = useState(localStorage.getItem('filename')==='null'? "Untitled Draft": localStorage.getItem('filename'));
-
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const editorRef = useRef(null);
 
@@ -215,6 +216,11 @@ function EditorPage() {
         },
         body: JSON.stringify(reqbody),
       });
+
+      if (response.status === 401) {
+        setShowSessionDialog(true); // open session timeout dialog
+        throw new Error("unauthorized");
+      }
 
       if (!response.ok) {
         const errorText = await response.text(); // Optional: to get more detailed backend error
@@ -447,6 +453,8 @@ function EditorPage() {
           </div>
         </div>
       )}
+
+      {showSessionDialog && <SessionDialogBox />}
     </div>
   );
 }
